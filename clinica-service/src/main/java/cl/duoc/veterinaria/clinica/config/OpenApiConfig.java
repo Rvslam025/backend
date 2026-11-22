@@ -21,10 +21,10 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("Veterinaria San Marcos - clinica-service")
                         .version("1.0.0")
-                        .description("
+                        .description("""
                                 Servicios y citas de la veterinaria.
                                 Para las rutas con candado primero hay que hacer login en auth-service (puerto 8081) \
-                                y pegar el token en Authorize"))
+                                y pegar el token en Authorize."""))
                 .addSecurityItem(new SecurityRequirement().addList(ESQUEMA_JWT))
                 .components(new Components().addSecuritySchemes(ESQUEMA_JWT,
                         new SecurityScheme()
