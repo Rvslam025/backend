@@ -42,3 +42,4 @@ public class Usuario {
         this.creadoEn = LocalDateTime.now();
     }
 }
+

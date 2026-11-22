@@ -1,7 +1,9 @@
 FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /app
+
 COPY pom.xml .
 COPY auth-service/pom.xml auth-service/
+COPY clinica-service/pom.xml clinica-service/
 COPY auth-service/src auth-service/src
 RUN mvn -q -pl auth-service -am package -DskipTests
 

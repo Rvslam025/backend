@@ -18,5 +18,7 @@
     </properties>
     <modules>
         <module>auth-service</module>
+        <module>clinica-service</module>
     </modules>
 </project>
+

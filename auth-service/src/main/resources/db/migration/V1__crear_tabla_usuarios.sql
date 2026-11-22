@@ -1,11 +1,10 @@
 CREATE TABLE usuarios (
-    id            BIGINT       NOT NULL AUTO_INCREMENT,
+    id            BIGSERIAL    PRIMARY KEY,
     nombre        VARCHAR(100) NOT NULL,
     email         VARCHAR(150) NOT NULL,
     password_hash VARCHAR(100) NOT NULL,
     rol           VARCHAR(20)  NOT NULL,
     activo        BOOLEAN      NOT NULL DEFAULT TRUE,
-    creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
+    creado_en     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uk_usuarios_email UNIQUE (email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
