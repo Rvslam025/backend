@@ -32,9 +32,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             try {
                 Claims claims = jwtService.leer(header.substring(7));
+                var usuario = new UsuarioAutenticado(
+                        Long.valueOf(claims.getSubject()),
+                        claims.get("nombre", String.class),
+                        claims.get("rol", String.class));
                 var auth = new UsernamePasswordAuthenticationToken(
-                        claims.getSubject(), null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + claims.get("rol", String.class))));
+                        usuario, null, List.of(new SimpleGrantedAuthority("ROLE_" + usuario.rol())));
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (JwtException | IllegalArgumentException e) {
                 SecurityContextHolder.clearContext(); // token inválido o vencido: sigue como anónimo

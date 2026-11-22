@@ -1,10 +1,9 @@
 CREATE TABLE roles (
-    id          TINYINT      NOT NULL AUTO_INCREMENT,
+    id          SMALLSERIAL  PRIMARY KEY,
     nombre      VARCHAR(20)  NOT NULL,
     descripcion VARCHAR(100) NOT NULL,
-    PRIMARY KEY (id),
     CONSTRAINT uk_roles_nombre UNIQUE (nombre)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 INSERT INTO roles (nombre, descripcion) VALUES
     ('ADMIN',         'Administrador'),
@@ -13,3 +12,6 @@ INSERT INTO roles (nombre, descripcion) VALUES
 
 ALTER TABLE usuarios
     ADD CONSTRAINT fk_usuarios_rol FOREIGN KEY (rol) REFERENCES roles (nombre);
+
+ALTER TABLE usuarios
+    ADD CONSTRAINT ck_usuarios_email_minusculas CHECK (email = LOWER(email));

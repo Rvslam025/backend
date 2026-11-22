@@ -29,8 +29,12 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        if (email == null || email.isBlank() || clave == null || clave.isBlank()) {
+            throw new IllegalStateException("Faltan ADMIN_EMAIL o ADMIN_PASSWORD en las variables de entorno");
+        }
         if (!repository.existsByEmail(email.trim().toLowerCase())) {
             usuarioService.crear(nombre, email, clave, Rol.ADMIN);
         }
     }
 }
+

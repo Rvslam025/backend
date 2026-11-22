@@ -19,10 +19,11 @@ public class OpenApiConfig {
     public OpenAPI openAPI(@Value("${app.openapi.server-url:}") String serverUrl) {
         OpenAPI api = new OpenAPI()
                 .info(new Info()
-                        .title("Veterinaria San Marcos - API REST")
+                        .title("Veterinaria San Marcos - auth-service")
                         .version("1.0.0")
                         .description("""
-                                API del backend: usuarios, autenticación con JWT y roles.
+                                Microservicio de usuarios, autenticación con JWT y roles (CLIENTE, RECEPCIONISTA, ADMIN).
+                                El token que entrega este servicio también sirve en clinica-service (puerto 8082).
                                 Para probar rutas protegidas: haz POST /api/auth/login, copia el campo `token` \
                                 y pégalo en el botón **Authorize** (sin escribir la palabra Bearer).
                                 Códigos: 400 datos inválidos, 401 sin token/vencido/credenciales malas, \
@@ -39,3 +40,4 @@ public class OpenApiConfig {
         return api;
     }
 }
+

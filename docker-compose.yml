@@ -1,20 +1,18 @@
 services:
-  mysql:
-    image: mysql:8.4
-    container_name: vet-mysql
+
+  postgres:
+    image: postgres:17
+    profiles: ["local"]
+    container_name: vet-postgres
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: veterinaria_auth
+      POSTGRES_DB: ${DB_NAME:-veterinaria}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "127.0.0.1:3306:3306"
+      - "127.0.0.1:5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      - pg_data:/var/lib/postgresql/data
 
   auth-service:
     build:
@@ -22,19 +20,44 @@ services:
       dockerfile: auth-service/Dockerfile
     container_name: vet-auth-service
     restart: unless-stopped
-    depends_on:
-      mysql:
-        condition: service_healthy
     environment:
-      DB_HOST: mysql
-      DB_USER: root
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-veterinaria}
+      DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD}
+      DB_SSLMODE: ${DB_SSLMODE:-require}
       JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER:-veterinaria-san-marcos}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-veterinaria-frontend}
+      JWT_EXP_MIN: ${JWT_EXP_MIN:-60}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       CORS_ORIGINS: ${CORS_ORIGINS}
+      JAVA_TOOL_OPTIONS: "-Xmx256m"
     ports:
       - "8081:8081"
 
+  clinica-service:
+    build:
+      context: .
+      dockerfile: clinica-service/Dockerfile
+    container_name: vet-clinica-service
+    restart: unless-stopped
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-veterinaria}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_SSLMODE: ${DB_SSLMODE:-require}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER:-veterinaria-san-marcos}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-veterinaria-frontend}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      JAVA_TOOL_OPTIONS: "-Xmx256m"
+    ports:
+      - "8082:8082"
+
 volumes:
-  mysql_data:
+  pg_data:
