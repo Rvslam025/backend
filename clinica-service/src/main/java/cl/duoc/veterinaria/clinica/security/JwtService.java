@@ -22,7 +22,7 @@ public class JwtService {
     public JwtService(@Value("${app.jwt.secret}") String secret,
                       @Value("${app.jwt.issuer}") String emisor,
                       @Value("${app.jwt.audience}") String destinatario) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)); // mínimo 32 bytes
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.emisor = emisor;
         this.destinatario = destinatario;
     }

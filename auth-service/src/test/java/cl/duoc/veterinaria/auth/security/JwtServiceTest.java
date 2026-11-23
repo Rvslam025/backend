@@ -51,7 +51,7 @@ class JwtServiceTest {
 
     @Test
     void rechazaUnTokenVencido() {
-        JwtService vencido = new JwtService(SECRETO, -1, EMISOR, DESTINATARIO); // expiró hace un minuto
+        JwtService vencido = new JwtService(SECRETO, -1, EMISOR, DESTINATARIO);
         String token = vencido.generarToken(ana());
 
         assertThrows(ExpiredJwtException.class, () -> vencido.leer(token));
