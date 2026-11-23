@@ -49,7 +49,6 @@ public class JwtService {
         return expiracionMinutos * 60;
     }
 
-    /** Comprueba firma, algoritmo, expiración, emisor y destinatario. Si algo falla lanza JwtException. */
     public Claims leer(String token) {
         Jws<Claims> jws = Jwts.parser()
                 .verifyWith(key)

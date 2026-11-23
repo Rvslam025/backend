@@ -80,7 +80,6 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.METHOD_NOT_ALLOWED, "Método " + ex.getMethod() + " no permitido en esta ruta");
     }
 
-    /** Cualquier otro error: se registra en el log y al cliente no se le muestran detalles internos. */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> errorInterno(Exception ex) {
         log.error("Error no controlado", ex);

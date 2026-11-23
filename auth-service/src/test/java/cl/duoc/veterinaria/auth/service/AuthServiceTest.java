@@ -29,7 +29,7 @@ class AuthServiceTest {
     @Mock
     private UsuarioRepository repository;
 
-    private final PasswordEncoder encoder = new BCryptPasswordEncoder(4); // costo bajo solo para que la prueba sea rápida
+    private final PasswordEncoder encoder = new BCryptPasswordEncoder(4);
     private final JwtService jwt = new JwtService("clave-de-prueba-con-mas-de-32-caracteres!!", 60,
             "veterinaria-san-marcos", "veterinaria-frontend");
     private AuthService service;

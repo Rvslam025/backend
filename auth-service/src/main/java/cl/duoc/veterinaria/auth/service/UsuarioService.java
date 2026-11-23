@@ -28,7 +28,6 @@ public class UsuarioService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    //El rol lo decide siempre el servidor (nunca viene del registro público). 
     @Transactional
     public Usuario crear(String nombre, String email, String clave, Rol rol) {
         String correo = email.trim().toLowerCase();
@@ -48,7 +47,6 @@ public class UsuarioService {
         return repository.findAll();
     }
 
-    /** Datos de quien tiene el token. Si la cuenta se desactivó, el token ya no sirve. */
     @Transactional(readOnly = true)
     public Usuario perfil(Long id) {
         Usuario u = repository.findById(id).orElseThrow(CredencialesInvalidasException::new);
@@ -72,7 +70,6 @@ public class UsuarioService {
         }
         boolean quitaSuRol = req.rol() != null && req.rol() != Rol.ADMIN;
         if (yo.esAdmin() && id.equals(yo.id()) && (quitaSuRol || Boolean.FALSE.equals(req.activo()))) {
-            // Si el último ADMIN se quitara el rol, nadie podría volver a administrar
             throw new ConflictoException("Un administrador no puede quitarse su propio rol ni desactivarse");
         }
 
@@ -95,7 +92,6 @@ public class UsuarioService {
         return guardar(u);
     }
 
-    /** Borrado lógico: la cuenta queda guardada, pero ya no puede iniciar sesión. */
     @Transactional
     public void desactivar(Long id, UsuarioAutenticado yo) {
         if (id.equals(yo.id())) {
@@ -110,7 +106,6 @@ public class UsuarioService {
         return repository.findById(id).orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
     }
 
-    /** Regla de la Guía 19: nadie ve ni cambia datos ajenos cambiando el id en la URL. */
     private void verificarDuenoOAdmin(Long id, UsuarioAutenticado yo) {
         if (!yo.esAdmin() && !id.equals(yo.id())) {
             throw new AccesoDenegadoException("No puedes ver ni modificar la cuenta de otra persona");
@@ -121,7 +116,6 @@ public class UsuarioService {
         try {
             return repository.saveAndFlush(u);
         } catch (DataIntegrityViolationException e) {
-            // Dos registros simultáneos con el mismo correo: lo detiene el UNIQUE de la tabla
             throw new EmailYaRegistradoException();
         }
     }
