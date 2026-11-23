@@ -40,7 +40,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         usuario, null, List.of(new SimpleGrantedAuthority("ROLE_" + usuario.rol())));
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (JwtException | IllegalArgumentException e) {
-                SecurityContextHolder.clearContext(); // token inválido o vencido: sigue como anónimo
+                SecurityContextHolder.clearContext();
             }
         }
         chain.doFilter(request, response);

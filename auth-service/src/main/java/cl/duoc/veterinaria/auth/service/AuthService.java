@@ -26,7 +26,6 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.limiteIntentos = limiteIntentos;
-        // Se compara contra este hash cuando el correo no existe, para que el tiempo de respuesta sea parecido
         this.hashFalso = passwordEncoder.encode("clave-falsa-para-igualar-tiempos");
     }
 
@@ -38,7 +37,6 @@ public class AuthService {
         String hash = (u != null) ? u.getPasswordHash() : hashFalso;
         boolean claveOk = passwordEncoder.matches(req.clave(), hash);
 
-        // Mismo error si el correo no existe, la clave falla o el usuario está inactivo
         if (u == null || !claveOk || !u.isActivo()) {
             limiteIntentos.registrarFallo(correo);
             throw new CredencialesInvalidasException();
