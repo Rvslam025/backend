@@ -3,6 +3,7 @@ package cl.duoc.veterinaria.auth.controller;
 import cl.duoc.veterinaria.auth.dto.UsuarioAdminRequest;
 import cl.duoc.veterinaria.auth.dto.UsuarioResponse;
 import cl.duoc.veterinaria.auth.dto.UsuarioUpdateRequest;
+import cl.duoc.veterinaria.auth.exception.ApiErrorResponse;
 import cl.duoc.veterinaria.auth.security.UsuarioAutenticado;
 import cl.duoc.veterinaria.auth.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;

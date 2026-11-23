@@ -4,6 +4,7 @@ import cl.duoc.veterinaria.auth.dto.LoginRequest;
 import cl.duoc.veterinaria.auth.dto.LoginResponse;
 import cl.duoc.veterinaria.auth.dto.RegistroRequest;
 import cl.duoc.veterinaria.auth.dto.UsuarioResponse;
+import cl.duoc.veterinaria.auth.exception.ApiErrorResponse;
 import cl.duoc.veterinaria.auth.model.Rol;
 import cl.duoc.veterinaria.auth.security.UsuarioAutenticado;
 import cl.duoc.veterinaria.auth.service.AuthService;
