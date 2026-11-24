@@ -7,8 +7,7 @@ import cl.duoc.veterinaria.auth.exception.ApiErrorResponse;
 import cl.duoc.veterinaria.auth.security.UsuarioAutenticado;
 import cl.duoc.veterinaria.auth.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -20,9 +19,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/usuarios")
-@Tag(name = "Usuarios", description = "CRUD de usuarios. Listar, crear y desactivar: solo ADMIN. Ver y modificar: el dueño de la cuenta o ADMIN.")
-@ApiResponse(responseCode = "401", description = "Sin token, token alterado o vencido",
-        content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+@Tag(name = "Usuarios",
+        description = "Gestión de usuarios. Listar, crear y desactivar son solo para ADMIN; "
+                + "ver y modificar, para ADMIN o para el propio usuario")
+@ApiResponse(responseCode = "401", description = "Sin token, token alterado o vencido")
+@ApiResponse(responseCode = "403", description = "Rol insuficiente o intento de acceder a la cuenta de otra persona")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
@@ -32,69 +33,59 @@ public class UsuarioController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar usuarios (ADMIN)", description = "Nunca incluye contraseñas ni hashes.")
+    @Operation(summary = "Listar usuarios (solo ADMIN)",
+            description = "Devuelve todos los usuarios, activos e inactivos, sin contraseña ni hash.")
     @ApiResponse(responseCode = "200", description = "Lista de usuarios")
-    @ApiResponse(responseCode = "403", description = "El rol no es ADMIN",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     public List<UsuarioResponse> listar() {
         return usuarioService.listar().stream().map(UsuarioResponse::from).toList();
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Crear usuario con rol (ADMIN)", description = "Alta hecha por el administrador, que elige el rol.")
+    @Operation(summary = "Crear un usuario con rol (solo ADMIN)",
+            description = "Alta hecha por el administrador: él define el rol (CLIENTE, RECEPCIONISTA o ADMIN). "
+                    + "La contraseña se guarda con hash BCrypt.")
     @ApiResponse(responseCode = "201", description = "Usuario creado")
-    @ApiResponse(responseCode = "400", description = "Datos inválidos",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    @ApiResponse(responseCode = "403", description = "El rol no es ADMIN",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    @ApiResponse(responseCode = "409", description = "El correo ya está registrado",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Datos inválidos o rol inexistente")
+    @ApiResponse(responseCode = "409", description = "El correo ya está registrado")
     public UsuarioResponse crear(@Valid @RequestBody UsuarioAdminRequest req) {
         return UsuarioResponse.from(usuarioService.crear(req.nombre(), req.email(), req.clave(), req.rol()));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Ver usuario", description = "Un usuario solo puede ver su propia cuenta; ADMIN puede ver cualquiera.")
-    @ApiResponse(responseCode = "200", description = "Usuario encontrado")
-    @ApiResponse(responseCode = "403", description = "Intento de ver la cuenta de otra persona",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    @ApiResponse(responseCode = "404", description = "Usuario no encontrado",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    public UsuarioResponse ver(@PathVariable Long id, @AuthenticationPrincipal UsuarioAutenticado yo) {
+    @Operation(summary = "Ver un usuario (ADMIN o el propio usuario)",
+            description = "Un usuario que no es ADMIN solo puede consultar su propia cuenta: "
+                    + "cambiar el id en la URL devuelve 403.")
+    @ApiResponse(responseCode = "200", description = "Datos del usuario")
+    @ApiResponse(responseCode = "404", description = "No existe un usuario con ese id")
+    public UsuarioResponse ver(@Parameter(description = "Identificador del usuario", example = "1") @PathVariable Long id,
+                               @AuthenticationPrincipal UsuarioAutenticado yo) {
         return UsuarioResponse.from(usuarioService.ver(id, yo));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Modificar usuario",
-            description = "El dueño de la cuenta o ADMIN. Solo ADMIN puede cambiar rol o estado (activo). "
-                    + "La clave es opcional: si no se envía, no cambia.")
-    @ApiResponse(responseCode = "200", description = "Usuario actualizado")
-    @ApiResponse(responseCode = "400", description = "Datos inválidos",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    @ApiResponse(responseCode = "403", description = "Cuenta ajena, o intento de cambiar rol/estado sin ser ADMIN",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    @ApiResponse(responseCode = "404", description = "Usuario no encontrado",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    @ApiResponse(responseCode = "409", description = "Correo duplicado, o un ADMIN intenta quitarse su propio rol",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    public UsuarioResponse actualizar(@PathVariable Long id, @Valid @RequestBody UsuarioUpdateRequest req,
+    @Operation(summary = "Modificar un usuario (ADMIN o el propio usuario)",
+            description = "Reemplaza nombre y correo; la contraseña es opcional (si se envía, se vuelve a hashear). "
+                    + "Solo un ADMIN puede cambiar el rol o el estado activo, y un ADMIN no puede quitarse su propio rol ni desactivarse.")
+    @ApiResponse(responseCode = "200", description = "Usuario modificado")
+    @ApiResponse(responseCode = "400", description = "Datos inválidos")
+    @ApiResponse(responseCode = "404", description = "No existe un usuario con ese id")
+    @ApiResponse(responseCode = "409", description = "El correo ya está en uso, o un ADMIN intentó quitarse su propio rol o desactivarse")
+    public UsuarioResponse actualizar(@Parameter(description = "Identificador del usuario", example = "1") @PathVariable Long id,
+                                      @Valid @RequestBody UsuarioUpdateRequest req,
                                       @AuthenticationPrincipal UsuarioAutenticado yo) {
         return UsuarioResponse.from(usuarioService.actualizar(id, req, yo));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Desactivar usuario (ADMIN)",
-            description = "Borrado lógico: la cuenta se conserva pero ya no puede iniciar sesión.")
+    @Operation(summary = "Desactivar un usuario (solo ADMIN)",
+            description = "Borrado lógico: la cuenta queda guardada con activo = false y ya no puede iniciar sesión.")
     @ApiResponse(responseCode = "204", description = "Usuario desactivado")
-    @ApiResponse(responseCode = "403", description = "El rol no es ADMIN",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    @ApiResponse(responseCode = "404", description = "Usuario no encontrado",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    @ApiResponse(responseCode = "409", description = "No puedes desactivar tu propia cuenta",
-            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
-    public void desactivar(@PathVariable Long id, @AuthenticationPrincipal UsuarioAutenticado yo) {
+    @ApiResponse(responseCode = "404", description = "No existe un usuario con ese id")
+    @ApiResponse(responseCode = "409", description = "No puedes desactivar tu propia cuenta")
+    public void desactivar(@Parameter(description = "Identificador del usuario", example = "1") @PathVariable Long id,
+                           @AuthenticationPrincipal UsuarioAutenticado yo) {
         usuarioService.desactivar(id, yo);
     }
 }
